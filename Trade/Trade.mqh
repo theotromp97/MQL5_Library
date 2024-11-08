@@ -8,8 +8,8 @@
 #property version   "1.00"
 
 #include <Trade\Trade.mqh>
-#include <Custom\Trade\TradeClasses.mqh>
-#include <Custom\HelpFunctions.mqh>
+#include <MQL5_Library\Trade\TradeClasses.mqh>
+#include <MQL5_Library\HelpFunctions.mqh>
 class Trade
   {
 private:
