@@ -48,13 +48,13 @@ public:
 
    bool              IsFilled() {return status == Status_Filled;}
    bool              IsCancelled() {return status == Status_Cancelled;}
-   bool              IsClosed() {return status == Status_Closed;}
    bool              IsOpened() {return status == Status_Open;}
+   bool              IsClosed() {return status == Status_Closed;}
 
    bool              IsFilledOS() {return status == Status_Filled && lastStatus != status;}
    bool              IsCancelledOS() {return status == Status_Cancelled && lastStatus != status;}
-   bool              IsClosedOS() {return status == Status_Closed && lastStatus != status;}
    bool              IsOpenedOS() {return status == Status_Open && lastStatus != status;}
+   bool              IsClosedOS() {return status == Status_Closed && lastStatus != status;}
 
 
    

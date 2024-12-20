@@ -3,10 +3,12 @@
 //|                                  Copyright 2024, MetaQuotes Ltd. |
 //|                                             https://www.mql5.com |
 //+------------------------------------------------------------------+
-string SuperTrendPath = "SuperTrend.ex5";
-string ErgodicPath = "ErgodicTSI.ex5";
 
-datetime previousBar;
+
+string superTrendPath = "SuperTrend.ex5";
+string ergodicPath = "ErgodicTSI.ex5";
+datetime   previousBar;
+
 
 enum IndicatorType
   {
@@ -30,13 +32,20 @@ enum Signal
    signalNone
   };
 
-//+---
-bool BarClose(ENUM_TIMEFRAMES timeframe)
+
+//+------------------------------------------------------------------+
+//|                                                                  |
+//+------------------------------------------------------------------+
+bool              BarClose(ENUM_TIMEFRAMES timeframe)
   {
-   bool retval = previousBar != iTime(_Symbol, timeframe, 0);
-   previousBar = iTime(_Symbol, timeframe, 0);
-   return retval;
+//bool retval = previousBar != iTime(_Symbol, timeframe, 0);
+//previousBar = iTime(_Symbol, timeframe, 0);
+//return retval;
+   return false;
   }
+
+//+---
+
 //+----
 //+------------------------------------------------------------------+
 //|                                                                  |
@@ -44,6 +53,7 @@ bool BarClose(ENUM_TIMEFRAMES timeframe)
 class Indicators
   {
 public:
+
    static void              Init()
      {
       //GetAdxSignal();
@@ -101,7 +111,7 @@ private:
       double close1 = iClose(_Symbol, PERIOD_CURRENT, 2);
       double open2 = iOpen(_Symbol, PERIOD_CURRENT, 1);
       double close2 = iClose(_Symbol, PERIOD_CURRENT, 1);
-      if(BarClose(PERIOD_CURRENT))
+      if(true) //BarClose(PERIOD_CURRENT))
         {
          // bullish
          if(open1 > close1 && open2 < close2 && close2 > open1)
@@ -124,7 +134,7 @@ private:
       int handle = 0;
       if(handle == 0)
         {
-         handle =  iCustom(_Symbol, tf, ErgodicPath);
+         //handle =  iCustom(_Symbol, tf, ErgodicPath);
         }
 
       // get value
@@ -165,7 +175,7 @@ private:
       int handle = 0;
       if(handle == 0)
         {
-         handle =  iCustom(_Symbol, period, SuperTrendPath,21,3, false, period);
+         //handle =  iCustom(_Symbol, period, Indicators::SuperTrendPath,21,3, false, period);
         }
 
       // get value
@@ -174,7 +184,7 @@ private:
       CopyBuffer(handle, 7, 0, 1, array);
       if(array[0] == 0.0)
          return signalNone;
-      
+
       // if value is ok, check signal
       CopyBuffer(handle, 8, 0, 1, array);
       if(array[0] == 1.0)
@@ -196,17 +206,17 @@ private:
       static int handle = 0;
       if(handle == 0)
         {
-         handle =  iRSI(_Symbol, PERIOD_CURRENT,14, PRICE_CLOSE);
+         handle =  iRSI(_Symbol, PERIOD_CURRENT,9, PRICE_CLOSE);
         }
 
       // get value
       double array[];
       CopyBuffer(handle, 0, 0, 1, array);
-      if(array[0] > 50.0)
+      if(array[0] < 20.0)
         {
          return signalLong;
         }
-      if(array[0] < 50.0)
+      if(array[0] > 80.0)
         {
          return signalShort;
         }
