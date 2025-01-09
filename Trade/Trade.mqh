@@ -57,9 +57,12 @@ public:
    bool              IsClosedOS() {return status == Status_Closed && lastStatus != status;}
 
 
-   
+
    void              SetStopOrder(string _symbol, TradeDirection _direction, double _volume, double _entry, double _takeProfit=0.0, double _stopLoss = 0.0);
-   void              SetTakeProfit(double _takeProfit);
+   void              SetTakeProfitAbs(double absTakeProfit);
+   void              SetTakeProfitRel(double relTakeProfit);
+   void              SetStopLossAbs(double absStopLoss);
+   void              SetStopLossRel(double relStopLoss);
    void              Close();
 
                      Trade() {Init();}
@@ -191,6 +194,7 @@ void Trade::SetMarket(double _volume)
 //+------------------------------------------------------------------+
 void              Trade::SetStopOrder(string _symbol, TradeDirection _direction, double _volume, double _entry, double _takeProfit=0.0, double _stopLoss = 0.0)
   {
+
    symbol = _symbol;
    direction = _direction;
    double entry = _entry;
@@ -202,6 +206,10 @@ void              Trade::SetStopOrder(string _symbol, TradeDirection _direction,
       if(tradeManager.BuyStop(volume, entry, symbol, stopLoss, takeProfit, ORDER_TIME_GTC,0))
         {
          ticketID = tradeManager.ResultOrder();
+         double tradeVolume =  tradeManager.RequestVolume();
+         double tradeEntry = tradeManager.RequestPrice();
+         averageEntry = (averageEntry * totalVolume + tradeVolume * tradeEntry) / (totalVolume + tradeVolume);
+         totalVolume = totalVolume + tradeVolume;
          status = Status_Open;
         }
      }
@@ -210,6 +218,10 @@ void              Trade::SetStopOrder(string _symbol, TradeDirection _direction,
       if(tradeManager.SellStop(volume, entry, symbol, stopLoss, takeProfit, ORDER_TIME_GTC, 0))
         {
          ticketID = tradeManager.ResultOrder();
+         double tradeVolume =  tradeManager.RequestVolume();
+         double tradeEntry = tradeManager.RequestPrice();
+         averageEntry = (averageEntry * totalVolume + tradeVolume * tradeEntry) / (totalVolume + tradeVolume);
+         totalVolume = totalVolume + tradeVolume;
          status = Status_Open;
         }
      }
@@ -233,9 +245,9 @@ void Trade::Close()
 //+------------------------------------------------------------------+
 void              Trade::AddExit()
   {
-   // get deals
+// get deals
    HistorySelectByPosition(ticketID);
-   // get information on latest deal
+// get information on latest deal
    ulong ticket = HistoryDealGetTicket(HistoryDealsTotal()-1);
    long dealType = HistoryDealGetInteger(ticket, DEAL_TYPE);
    long dealEntry = HistoryDealGetInteger(ticket, DEAL_ENTRY);
@@ -302,7 +314,7 @@ void              Trade::CalculatePNL()
      {
       realizedPNL = realizedPNL + exits[i].profit;
      }
-     totalPNL = unrealizedPNL + realizedPNL;
+   totalPNL = unrealizedPNL + realizedPNL;
   }
 
 //+------------------------------------------------------------------+
@@ -312,16 +324,63 @@ void              Trade::CalculatePNL()
 //+------------------------------------------------------------------+
 //|                                                                  |
 //+------------------------------------------------------------------+
-void Trade::SetTakeProfit(double _takeProfit)
+void Trade::SetTakeProfitAbs(double absTakeProfit)
   {
-   if(_takeProfit == takeProfit)
+   if(absTakeProfit == takeProfit)
       return;
-   takeProfit = _takeProfit;
+   takeProfit = absTakeProfit;
    if(IsFilled())
       tradeManager.PositionModify(ticketID, stopLoss, takeProfit);
    else
       tradeManager.OrderModify(ticketID, averageEntry, stopLoss, takeProfit, ORDER_TIME_GTC, 0);
   }
+
+//+------------------------------------------------------------------+
+//|                                                                  |
+//+------------------------------------------------------------------+
+void Trade::SetTakeProfitRel(double relTakeProfit)
+  {
+   double newTakeProfit = direction == DirectionLong ? averageEntry + relTakeProfit : averageEntry - relTakeProfit;
+   if(newTakeProfit == takeProfit)
+      return;
+   takeProfit = newTakeProfit;
+   if(IsFilled())
+      tradeManager.PositionModify(ticketID, stopLoss, takeProfit);
+   else
+      tradeManager.OrderModify(ticketID, averageEntry, stopLoss, takeProfit, ORDER_TIME_GTC, 0);
+  }
+
+//+------------------------------------------------------------------+
+//|                                                                  |
+//+------------------------------------------------------------------+
+void Trade::SetStopLossAbs(double absStopLoss)
+  {
+   if(absStopLoss == stopLoss)
+      return;
+   stopLoss = absStopLoss;
+   if(IsFilled())
+      tradeManager.PositionModify(ticketID, stopLoss, takeProfit);
+   else
+      tradeManager.OrderModify(ticketID, averageEntry, stopLoss, takeProfit, ORDER_TIME_GTC, 0);
+  }
+
+//+------------------------------------------------------------------+
+//|                                                                  |
+//+------------------------------------------------------------------+
+void Trade::SetStopLossRel(double relStopLoss)
+  {
+   double newStopLoss;
+   direction == DirectionLong ? newStopLoss = averageEntry - relStopLoss : newStopLoss = averageEntry + relStopLoss;
+   if(newStopLoss == stopLoss)
+      return;
+   stopLoss = newStopLoss;
+   if(IsFilled())
+      tradeManager.PositionModify(ticketID, stopLoss, takeProfit);
+   else
+      tradeManager.OrderModify(ticketID, averageEntry, stopLoss, takeProfit, ORDER_TIME_GTC, 0);
+  }
+
+
 //+------------------------------------------------------------------+
 //|                                                                  |
 //+------------------------------------------------------------------+
