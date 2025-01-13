@@ -10,6 +10,11 @@
 #include <Trade\Trade.mqh>
 #include <MQL5_Library\Trade\TradeClasses.mqh>
 #include <MQL5_Library\HelpFunctions.mqh>
+
+
+//+------------------------------------------------------------------+
+//|                                                                  |
+//+------------------------------------------------------------------+
 class Trade
   {
 private:
@@ -64,6 +69,7 @@ public:
    void              SetStopLossAbs(double absStopLoss);
    void              SetStopLossRel(double relStopLoss);
    void              Close();
+   void              ClosePartial(double _volume);
 
                      Trade() {Init();}
                      Trade(CTrade& _tradeManager)
@@ -234,6 +240,18 @@ void Trade::Close()
    if(tradeManager.PositionClose(ticketID))
      {
       status=Status_Closed;
+      CalculatePNL();
+     }
+  }
+
+//+------------------------------------------------------------------+
+//|                                                                  |
+//+------------------------------------------------------------------+
+void Trade::ClosePartial(double _volume)
+  {
+   if(tradeManager.PositionClosePartial(ticketID, _volume))
+     {
+      AddExit();
       CalculatePNL();
      }
   }
