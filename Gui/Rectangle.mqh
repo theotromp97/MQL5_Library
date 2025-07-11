@@ -7,10 +7,6 @@
 #property link      "https://www.mql5.com"
 #include <MQL5_Library\Gui\GuiTextObject.mqh>
 
-#define BTN_STATE_Clicked 1
-#define BTN_STATE_NotClicked 0
-#define BUTTON_RETVAL_NONE 0
-
 //+------------------------------------------------------------------+
 //|                                                                  |
 //+------------------------------------------------------------------+
@@ -18,24 +14,20 @@
 //+------------------------------------------------------------------+
 //|                                                                  |
 //+------------------------------------------------------------------+
-class Button : public GuiTextObject
+class Rectangle : public GuiObject
   {
 public:
-   int               returnCode;
 
-                     Button(string _name, int _x, int _y, int _width, int _height, string _text, int _returnCode = 1) :
-                     GuiTextObject(_name, _x, _y, _width, _height, _text, OBJ_BUTTON)
+                     Rectangle(string _name, int _x, int _y, int _width, int _height) :
+                     GuiObject(_name, _x, _y, _width, _height, OBJ_RECTANGLE_LABEL)
      {
-      returnCode = _returnCode;
+     objectStyle = objectDefaultGray;
      }
-
-   //+------------------------------------------------------------------+
    bool              Create() override
-     {
-      if(!ObjectCreate(0, name, objectType, 0, x, y, x+width, y+height))
-         return false;
-      if(!ObjectSetString(0, name, OBJPROP_TEXT, text))
-         return false;
+      {  
+//         Print("Failed to create the button! Error code = ",GetLastError());
+      if(!ObjectCreate(0, name, objectType, 0, 0, 0))
+         return(false);
       if(!ObjectSetInteger(0, name, OBJPROP_XDISTANCE, x))
          return false;
       if(!ObjectSetInteger(0, name, OBJPROP_YDISTANCE, y))
@@ -44,33 +36,21 @@ public:
          return false;
       if(!ObjectSetInteger(0, name, OBJPROP_YSIZE, height))
          return false;
-      textStyle.Apply(name);
-      objectStyle.Apply(name);
+      if(!ObjectSetInteger(0, name, OBJPROP_FILL,true))
+         return false;
+      if(!ObjectSetInteger(0, name, OBJPROP_ZORDER,-1))
+         return false;
+      if(!ObjectSetInteger(0, name, OBJPROP_STYLE,STYLE_SOLID))
+         return false;
+      if(!ObjectSetInteger(0, name, OBJPROP_BORDER_TYPE, BORDER_FLAT))
+         return false;
+      // Apply styles
+      if(!objectStyle.Apply(name))
+         return false;
+    
       visible = true;
       created = true;
       return true;
      }
 
-   bool              SetButtonState(bool _clicked)
-     {
-      return ObjectSetInteger(0, name, OBJPROP_STATE, _clicked);
-     }
-   bool               IsClicked()
-     {
-      long retVal = ObjectGetInteger(0, name, OBJPROP_STATE);
-      return retVal == 1;
-     }
-   //+------------------------------------------------------------------+
-   int               IsClickedRetVal()
-     {
-      if(IsClicked())
-        {
-         return returnCode;
-        }
-      else
-        {
-         return BUTTON_RETVAL_NONE;
-        }
-     }
   };
-//+------------------------------------------------------------------+

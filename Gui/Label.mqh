@@ -7,10 +7,6 @@
 #property link      "https://www.mql5.com"
 #include <MQL5_Library\Gui\GuiTextObject.mqh>
 
-#define BTN_STATE_Clicked 1
-#define BTN_STATE_NotClicked 0
-#define BUTTON_RETVAL_NONE 0
-
 //+------------------------------------------------------------------+
 //|                                                                  |
 //+------------------------------------------------------------------+
@@ -18,22 +14,20 @@
 //+------------------------------------------------------------------+
 //|                                                                  |
 //+------------------------------------------------------------------+
-class Button : public GuiTextObject
+class Label : public GuiTextObject
   {
 public:
-   int               returnCode;
-
-                     Button(string _name, int _x, int _y, int _width, int _height, string _text, int _returnCode = 1) :
-                     GuiTextObject(_name, _x, _y, _width, _height, _text, OBJ_BUTTON)
+                     Label(string _name, int _x, int _y, int _width, int _height, string _text) :
+                     GuiTextObject(_name, _x, _y, _width, _height, _text, OBJ_LABEL)
      {
-      returnCode = _returnCode;
+      textStyle = textDefaultWhite;
      }
-
-   //+------------------------------------------------------------------+
    bool              Create() override
-     {
-      if(!ObjectCreate(0, name, objectType, 0, x, y, x+width, y+height))
-         return false;
+     {  
+//         Print("Failed to create the button! Error code = ",GetLastError());
+//   
+      if(!ObjectCreate(0, name, objectType, 0, 0, 0))
+         return(false);
       if(!ObjectSetString(0, name, OBJPROP_TEXT, text))
          return false;
       if(!ObjectSetInteger(0, name, OBJPROP_XDISTANCE, x))
@@ -44,33 +38,18 @@ public:
          return false;
       if(!ObjectSetInteger(0, name, OBJPROP_YSIZE, height))
          return false;
-      textStyle.Apply(name);
-      objectStyle.Apply(name);
+      if(!ObjectSetInteger(0, name, OBJPROP_BACK, false))
+         return false;
+    
+      // Apply styles
+      if(!textStyle.Apply(name))
+         return false;
+      if(!objectStyle.Apply(name))
+         return false;
+    
       visible = true;
       created = true;
       return true;
      }
 
-   bool              SetButtonState(bool _clicked)
-     {
-      return ObjectSetInteger(0, name, OBJPROP_STATE, _clicked);
-     }
-   bool               IsClicked()
-     {
-      long retVal = ObjectGetInteger(0, name, OBJPROP_STATE);
-      return retVal == 1;
-     }
-   //+------------------------------------------------------------------+
-   int               IsClickedRetVal()
-     {
-      if(IsClicked())
-        {
-         return returnCode;
-        }
-      else
-        {
-         return BUTTON_RETVAL_NONE;
-        }
-     }
   };
-//+------------------------------------------------------------------+
