@@ -17,6 +17,7 @@
 class Input : public GuiTextObject
   {
 public:
+                     Input();
                      Input(string _name, int _x, int _y, int _width, int _height, string _text) :
                      GuiTextObject(_name, _x, _y, _width, _height, _text, OBJ_EDIT)
      {

@@ -17,7 +17,7 @@
 class Rectangle : public GuiObject
   {
 public:
-
+                     Rectangle(){}
                      Rectangle(string _name, int _x, int _y, int _width, int _height) :
                      GuiObject(_name, _x, _y, _width, _height, OBJ_RECTANGLE_LABEL)
      {

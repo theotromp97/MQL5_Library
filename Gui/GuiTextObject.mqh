@@ -18,6 +18,7 @@ class GuiTextObject : public GuiObject
 public:
    TextStyle         textStyle;
    string            text;
+                     GuiTextObject() {}
                      GuiTextObject(string _name, int _x, int _y, int _width, int _height, string _text, ENUM_OBJECT _objectType) :
                      GuiObject(_name, _x, _y, _width, _height, _objectType)
      {

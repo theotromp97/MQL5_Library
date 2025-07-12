@@ -22,7 +22,7 @@ class Button : public GuiTextObject
   {
 public:
    int               returnCode;
-
+                     Button() {}
                      Button(string _name, int _x, int _y, int _width, int _height, string _text, int _returnCode = 1) :
                      GuiTextObject(_name, _x, _y, _width, _height, _text, OBJ_BUTTON)
      {
@@ -55,9 +55,11 @@ public:
      {
       return ObjectSetInteger(0, name, OBJPROP_STATE, _clicked);
      }
-   bool               IsClicked()
+   bool               IsClicked(bool resetButtonState = true)
      {
       long retVal = ObjectGetInteger(0, name, OBJPROP_STATE);
+      if(resetButtonState)
+         ObjectSetInteger(0, name, OBJPROP_STATE, BTN_STATE_NotClicked);
       return retVal == 1;
      }
    //+------------------------------------------------------------------+

@@ -30,6 +30,7 @@ public:
    bool              created, visible;
    ENUM_OBJECT       objectType;
    ObjectStyle       objectStyle;
+                     GuiObject() {}
                      GuiObject(string _name, int _x, int _y, int _width, int _height, ENUM_OBJECT _objectType)
      {
       name = _name;
@@ -51,7 +52,13 @@ public:
 
    bool              Delete()
      {
-      return ObjectDelete(0, name);
+      if(created)
+        {
+         if(!ObjectDelete(0, name))
+            return false;
+        }
+      created = false;
+      return true;
      }
 
    void              SetObjectStyle(ObjectStyle &_objectStyle)
@@ -135,3 +142,4 @@ public:
   };
 
 
+//+------------------------------------------------------------------+

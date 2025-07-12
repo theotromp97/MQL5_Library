@@ -17,6 +17,7 @@
 class Label : public GuiTextObject
   {
 public:
+                     Label() {}
                      Label(string _name, int _x, int _y, int _width, int _height, string _text) :
                      GuiTextObject(_name, _x, _y, _width, _height, _text, OBJ_LABEL)
      {

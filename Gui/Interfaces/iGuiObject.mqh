@@ -21,10 +21,9 @@ interface   iGuiObject
    bool              Delete();
    bool              Hide();
    bool              Show();
-   void              SetObjectStyle(ObjectStyle &_style);
    bool              ApplyObjectStyle();
    bool              Move(int _relX, int _relY);
-   bool              SetWidth(int width);
-   bool              SetHeight(int height);
+   bool              SetWidth(int _width);
+   bool              SetHeight(int _height);
   };
 //+------------------------------------------------------------------+
