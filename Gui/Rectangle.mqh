@@ -25,6 +25,8 @@ public:
      }
    bool              Create() override
       {  
+      if(created)
+         return true;
 //         Print("Failed to create the button! Error code = ",GetLastError());
       if(!ObjectCreate(0, name, objectType, 0, 0, 0))
          return(false);

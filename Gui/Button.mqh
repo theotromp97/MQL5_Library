@@ -9,7 +9,7 @@
 
 #define BTN_STATE_Clicked 1
 #define BTN_STATE_NotClicked 0
-#define BUTTON_RETVAL_NONE 0
+#define BTN_RetVal_None 0
 
 //+------------------------------------------------------------------+
 //|                                                                  |
@@ -32,6 +32,8 @@ public:
    //+------------------------------------------------------------------+
    bool              Create() override
      {
+      if(created)
+         return true;
       if(!ObjectCreate(0, name, objectType, 0, x, y, x+width, y+height))
          return false;
       if(!ObjectSetString(0, name, OBJPROP_TEXT, text))
@@ -71,7 +73,7 @@ public:
         }
       else
         {
-         return BUTTON_RETVAL_NONE;
+         return BTN_RetVal_None;
         }
      }
   };

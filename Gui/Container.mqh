@@ -59,6 +59,7 @@ public:
 
       childArray.Add(&rectBody);
      }
+
    bool              Create() override
      {
       if(created)
@@ -69,12 +70,21 @@ public:
          return false;
       if(!btnCollapse.Create())
          return false;
-      if(!rectBody.Create())
-         return false;
 
+      // Create Children
+      for(int _i = 0; _i < childArray.count; _i++)
+        {
+         iGuiObject *child = (iGuiObject *)childArray.Get(_i);
+         if(child != NULL)
+           {
+            if(!child.Create())
+               return false;
+           }
+        }
       created = true;
       return true;
      }
+
    bool              Delete()
      {
       rectHeader.Delete();
@@ -94,6 +104,7 @@ public:
       created = false;
       return true;
      }
+
    bool              Show()
      {
       if(!Delete())
@@ -102,10 +113,12 @@ public:
          return false;
       return true;
      }
+
    bool              Hide()
      {
       return Delete();
      }
+
    bool              ApplyObjectStyle()
      {
       rectHeader.ApplyObjectStyle();
@@ -143,6 +156,7 @@ public:
 
       return true;
      }
+
    bool              SetWidth(int _width)
      {
       if(!rectHeader.SetWidth(_width))
@@ -156,6 +170,7 @@ public:
       width = _width;
       return true;
      }
+
    bool                 SetHeight(int _height)
      {
       if(!rectBody.SetHeight(_height))
@@ -195,11 +210,78 @@ public:
       collapsed = !collapsed;
       return true;
      }
-   bool              AddGuiObject(iGuiObject &_child)
+
+   ENUM_OBJECT       GetObjectType()
      {
-      return false;
+      return 0;
      }
 
+   bool              SetAbsolutePositionToRelative(int _x, int _y)
+     {
+      // Delete the object if already created to prevent double creation
+      Delete();
+      x = x + _x;
+      y = y + _y;
+      //
+      if(!rectHeader.SetAbsolutePositionToRelative(x, y))
+         return false;
+      if(!rectBody.SetAbsolutePositionToRelative(x,y))
+         return false;
+      if(!lblTitle.SetAbsolutePositionToRelative(x,y))
+         return false;
+      if(!btnCollapse.SetAbsolutePositionToRelative(x,y))
+         return false;
+      // Set relative position for all children
+      for(int _i = 0; _i < childArray.count; _i++)
+        {
+         iGuiObject *child = (iGuiObject *)childArray.Get(_i);
+         if(child != NULL)
+           {
+            if(!child.SetAbsolutePositionToRelative(x, y))
+               return false;
+           }
+        }
+      return true;
+     }
+
+   //+------------------------------------------------------------------+
+   //|                                                                  |
+   //+------------------------------------------------------------------+
+   bool              AddGuiObject(iGuiObject &_child)
+     {
+      _child.SetAbsolutePositionToRelative(x, y + headerHeight);
+      if(!_child.Create())
+         return false;
+      if(childArray.Add(&_child))
+         return false;
+      return true;
+     }
+
+   //+------------------------------------------------------------------+
+   //|                                                                  |
+   //+------------------------------------------------------------------+
+   int               IsClicked()
+     {
+      if(btnCollapse.IsClicked(true))
+        {
+         ToggleCollapse();
+         return BTN_RetVal_None;
+        }
+      else
+        {
+         // Loop through children
+         for(int _i = 0; _i < childArray.count; _i++)
+           {
+            iGuiObject *child = (iGuiObject*)childArray.Get(_i);
+            Button *button = dynamic_cast<Button*>(child);
+            if(button != NULL)
+              {
+               return button.IsClickedRetVal();
+              }
+           }
+        }
+      return BTN_RetVal_None;
+     }
 
   };
 //+------------------------------------------------------------------+

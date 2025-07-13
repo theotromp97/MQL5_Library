@@ -25,5 +25,7 @@ interface   iGuiObject
    bool              Move(int _relX, int _relY);
    bool              SetWidth(int _width);
    bool              SetHeight(int _height);
+   bool              SetAbsolutePositionToRelative(int _x, int _y);
+   ENUM_OBJECT       GetObjectType();
   };
 //+------------------------------------------------------------------+

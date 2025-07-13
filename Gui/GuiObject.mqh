@@ -44,6 +44,10 @@ public:
       visible = false;
      }
 
+   ENUM_OBJECT       GetObjectType()
+     {
+      return objectType;
+     }
 
    virtual bool              Create()
      {
@@ -138,7 +142,18 @@ public:
       height = height;
       return true;
      }
+//+------------------------------------------------------------------+
+//|    Set position from declaration to relative positions, by adding the base position |
+//+------------------------------------------------------------------+
 
+   bool              SetAbsolutePositionToRelative(int _x, int _y)
+     {
+     // Delete the object if already created to prevent double creation
+     Delete();
+      x = x + _x;
+      y = y + _y;
+      return true;
+     }
   };
 
 
