@@ -44,6 +44,7 @@ public:
    double            price;
    double            profit;
    long              positionID;
+   datetime          time;
                      Exit()
      {
       // Determine ticketID
@@ -60,6 +61,7 @@ public:
       positionID = HistoryDealGetInteger(ticket, DEAL_POSITION_ID);
       // direction
       profit = HistoryDealGetDouble(ticket, DEAL_PROFIT);
+      time = (datetime) HistoryDealGetInteger(ticket, DEAL_TIME);
      }
   };
 //+------------------------------------------------------------------+
@@ -75,11 +77,13 @@ public:
    double            volume;
    double            price;
    long              positionID;
+   datetime          time;
                      Entry() {}
-                     Entry(double _volume, double _price)
+                     Entry(double _volume, double _price, datetime _time)
      {
       volume = _volume;
       price = _price;
+      time = _time;
      }
    void              SetPositionID(long _positionID)
      {

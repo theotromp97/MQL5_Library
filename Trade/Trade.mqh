@@ -294,11 +294,10 @@ void              Trade::AddEntry()
      {
       double volume = HistoryDealGetDouble(ticket,DEAL_VOLUME);
       double entry = HistoryDealGetDouble(ticket,DEAL_PRICE);
-      Entry e(volume, entry);
+      datetime time = (datetime) HistoryDealGetInteger(ticket, DEAL_TIME);
+      Entry e(volume, entry, time);
       AddArray(entries, e);
-      //break;
      }
-//}
   }
 
 //+------------------------------------------------------------------+
@@ -306,7 +305,6 @@ void              Trade::AddEntry()
 //+------------------------------------------------------------------+
 void              Trade::UpdateStatus()
   {
-// SetStatus
 // status cancelled and opened are set on entry/cancel
    if(PositionSelectByTicket(ticketID))
       status = Status_Filled;
