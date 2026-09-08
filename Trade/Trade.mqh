@@ -10,6 +10,7 @@
 #include <Trade\Trade.mqh>
 #include <MQL5_Library\Trade\TradeClasses.mqh>
 #include <MQL5_Library\HelpFunctions.mqh>
+#include <MQL5_Library\Gui\Arrow.mqh>
 
 
 //+------------------------------------------------------------------+
@@ -28,17 +29,20 @@ private:
    void              UpdateStatus();
    void              CalculatePNL();
 
-   void              SetLimit(double _volume, double _entry);
-   void              SetMarket(double _volume);
+   bool              SetLimit(double _volume, double _entry);
+   bool              SetMarket(double _volume);
+   Arrow             arrowArray[];
 
 public:
    string            symbol;
    TradeDirection    direction;
    TradeStatus       status;
 
+#property
    ulong             ticketID;
    double            totalVolume;
    double            averageEntry;
+   double            averageExit;
    double            takeProfit;
    double            stopLoss;
    double            realizedPNL;
@@ -47,7 +51,6 @@ public:
    Exit              exits[];
    Entry             entries[];
 
-
    bool              IsLong() { return direction == DirectionLong;}
    bool              IsShort() { return direction == DirectionShort;}
 
@@ -55,21 +58,37 @@ public:
    bool              IsCancelled() {return status == Status_Cancelled;}
    bool              IsOpened() {return status == Status_Open;}
    bool              IsClosed() {return status == Status_Closed;}
+   bool              IsNone()   {return status == Status_None;}
 
    bool              IsFilledOS() {return status == Status_Filled && lastStatus != status;}
    bool              IsCancelledOS() {return status == Status_Cancelled && lastStatus != status;}
    bool              IsOpenedOS() {return status == Status_Open && lastStatus != status;}
    bool              IsClosedOS() {return status == Status_Closed && lastStatus != status;}
+   double            GetLastClosePNL(int offset);
 
 
-
-   void              SetStopOrder(string _symbol, TradeDirection _direction, double _volume, double _entry, double _takeProfit=0.0, double _stopLoss = 0.0);
+   bool              SetStopOrder(string _symbol, TradeDirection _direction, double _volume, double _entry, double _takeProfit=0.0, double _stopLoss = 0.0);
    void              SetTakeProfitAbs(double absTakeProfit);
    void              SetTakeProfitRel(double relTakeProfit);
    void              SetStopLossAbs(double absStopLoss);
    void              SetStopLossRel(double relStopLoss);
-   void              Close();
-   void              ClosePartial(double _volume);
+   bool              Close();
+   bool              ClosePartial(double _volume);
+
+   static TradeDirection   OppositeDirection(TradeDirection dir)
+     {
+      if(dir == DirectionLong)
+         return DirectionShort;
+      else
+         return DirectionLong;
+     }
+
+   double            GetLastExitPrice()
+     {
+      if(ArraySize(exits) <= 0)
+         return 0.0;
+      return exits[ArraySize(exits) - 1].price;
+     }
 
                      Trade() {Init();}
                      Trade(CTrade& _tradeManager)
@@ -82,7 +101,7 @@ public:
    //+------------------------------------------------------------------+
    //|                                                                  |
    //+------------------------------------------------------------------+
-   void              Enter(string _symbol, TradeDirection _direction, double _volume, double _entry, double _takeProfit=0.0, double _stopLoss = 0.0)
+   bool              Enter(string _symbol, TradeDirection _direction, double _volume, double _entry, double _takeProfit=0.0, double _stopLoss = 0.0)
      {
       symbol = _symbol;
       direction = _direction;
@@ -97,17 +116,17 @@ public:
         {
          _currentPrice = SymbolInfoDouble(symbol, SYMBOL_ASK);
          if(_currentPrice <= _entry)
-            SetMarket(NormalizeDouble(_volume, 2));
+            return SetMarket(NormalizeDouble(_volume, 2));
          else
-            SetLimit(NormalizeDouble(_volume, 2), _entry);
+            return SetLimit(NormalizeDouble(_volume, 2), _entry);
         }
       else
         {
          _currentPrice = SymbolInfoDouble(symbol, SYMBOL_BID);
          if(_currentPrice >= _entry)
-            SetMarket(NormalizeDouble(_volume, 2));
+            return SetMarket(NormalizeDouble(_volume, 2));
          else
-            SetLimit(NormalizeDouble(_volume, 2), _entry);
+            return SetLimit(NormalizeDouble(_volume, 2), _entry);
         }
      }
 
@@ -129,16 +148,71 @@ public:
       lastStatus = status;
      }
 
-   void              Trade::Cancel()
+   bool              Trade::Cancel()
      {
-      tradeManager.OrderDelete(ticketID);
+      if(!tradeManager.OrderDelete(ticketID))
+         return false;
       status = Status_Cancelled;
+      return true;
      }
+
+   bool              Draw()
+     {
+
+      // Check closed oneshot to prevent redrawing of finished trades
+      if(IsClosedOS())
+        {
+         // Delete Old (oneshot)
+         for(int i=0;i<ArraySize(arrowArray);i++)
+           {
+            if(!arrowArray[i].Delete())
+               return false;
+           }
+         // Create new (oneShot)
+         for(int i=0; i<ArraySize(entries); i++)
+           {
+            Arrow a = new Arrow(StringFormat("Entry %s", (string)ticketID), entries[i].time, entries[i].price, exits[0].time, exits[0].price);
+            a.Create();
+            AddArray(arrowArray, a);
+           }
+         return true;
+        }
+      printf((string)status);
+      printf((string)Status_Open);
+      if(IsFilled())
+        {
+         // Delete old
+         for(int i=0;i<ArraySize(arrowArray);i++)
+           {
+            if(!IsClosed())
+              {
+               if(!arrowArray[i].Delete())
+                  return false;
+               RemoveFromArray(arrowArray, i);
+
+              }
+           }
+         // Create new
+         for(int i=0; i<ArraySize(entries); i++)
+           {
+            if(IsFilled())
+              {
+               double currentPrice = SymbolInfoDouble(_Symbol, SYMBOL_ASK);
+               Arrow a = new Arrow(StringFormat("Entry %s", (string)ticketID), entries[i].time, entries[i].price, TimeCurrent(),currentPrice);
+               a.Create();
+               AddArray(arrowArray, a);
+              }
+           }
+        }
+      return true;
+     }
+
   };
 
 
+
 //+------------------------------------------------------------------+
-void              Trade::SetLimit(double _volume, double _entry)
+bool              Trade::SetLimit(double _volume, double _entry)
   {
    if(IsLong())
      {
@@ -151,6 +225,8 @@ void              Trade::SetLimit(double _volume, double _entry)
          totalVolume = totalVolume + tradeVolume;
          status = Status_Open;
         }
+      else
+         return false;
      }
    else
      {
@@ -163,12 +239,15 @@ void              Trade::SetLimit(double _volume, double _entry)
          totalVolume = totalVolume + tradeVolume;
          status = Status_Open;
         }
+      else
+         return false;
      }
+   return true;
   }
 //+------------------------------------------------------------------+
 //|                                                                  |
 //+------------------------------------------------------------------+
-void Trade::SetMarket(double _volume)
+bool Trade::SetMarket(double _volume)
   {
    if(IsLong())
      {
@@ -181,6 +260,8 @@ void Trade::SetMarket(double _volume)
          totalVolume = totalVolume + tradeVolume;
          status = Status_Filled;
         }
+      else
+         return false;
      }
    else
      {
@@ -193,14 +274,16 @@ void Trade::SetMarket(double _volume)
          totalVolume = totalVolume + tradeVolume;
          status = Status_Filled;
         }
+      else
+         return false;
      }
+   return true;
   }
 //+------------------------------------------------------------------+
 //|                                                                  |
 //+------------------------------------------------------------------+
-void              Trade::SetStopOrder(string _symbol, TradeDirection _direction, double _volume, double _entry, double _takeProfit=0.0, double _stopLoss = 0.0)
+bool              Trade::SetStopOrder(string _symbol, TradeDirection _direction, double _volume, double _entry, double _takeProfit=0.0, double _stopLoss = 0.0)
   {
-
    symbol = _symbol;
    direction = _direction;
    double entry = _entry;
@@ -218,6 +301,11 @@ void              Trade::SetStopOrder(string _symbol, TradeDirection _direction,
          totalVolume = totalVolume + tradeVolume;
          status = Status_Open;
         }
+      else
+         if(SetMarket(volume))
+            return true;
+         else
+            return false;
      }
    else
      {
@@ -230,30 +318,42 @@ void              Trade::SetStopOrder(string _symbol, TradeDirection _direction,
          totalVolume = totalVolume + tradeVolume;
          status = Status_Open;
         }
+      else
+         if(SetMarket(volume))
+            return true;
+         else
+            return false;
      }
+   return true;
   }
 //+------------------------------------------------------------------+
 
 //+------------------------------------------------------------------+
-void Trade::Close()
+bool Trade::Close()
   {
    if(tradeManager.PositionClose(ticketID))
      {
       status=Status_Closed;
       CalculatePNL();
      }
+   else
+      return false;
+   return true;
   }
 
 //+------------------------------------------------------------------+
 //|                                                                  |
 //+------------------------------------------------------------------+
-void Trade::ClosePartial(double _volume)
+bool Trade::ClosePartial(double _volume)
   {
    if(tradeManager.PositionClosePartial(ticketID, _volume))
      {
       AddExit();
       CalculatePNL();
      }
+   else
+      return false;
+   return true;
   }
 //+------------------------------------------------------------------+
 
@@ -274,7 +374,12 @@ void              Trade::AddExit()
      {
       Exit e(ticket);
       AddArray(exits, e);
+      totalVolume -= e.volume;
       //break;
+     }
+   else
+     {
+      Alert("Exit not found. Code line: Trade.mqh:280");
      }
 //}
   }
@@ -415,5 +520,16 @@ void Trade::Init(void)
    realizedPNL = 0.0;
    unrealizedPNL = 0.0;
    totalPNL = 0.0;
+  }
+
+//+------------------------------------------------------------------+
+//|                                                                  |
+//+------------------------------------------------------------------+
+double Trade::GetLastClosePNL(int offset = 0)
+  {
+   if(ArraySize(exits) <= 0)
+      return 0.0;
+   double _profit = exits[ArraySize(exits) - offset - 1].profit;
+   return _profit;
   }
 //+------------------------------------------------------------------+
