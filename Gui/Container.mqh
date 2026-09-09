@@ -7,23 +7,23 @@
 #property link      "https://www.mql5.com"
 #include <MQL5_Library\Gui\GuiObject.mqh>
 #include <MQL5_Library\Gui\Rectangle.mqh>
+#include <MQL5_Library\Gui\Label.mqh>
 #include <MQL5_Library\Gui\Button.mqh>
 #include <MQL5_Library\Gui\ArrayIGuiObject.mqh>
 
 //+------------------------------------------------------------------+
 //|                                                                  |
 //+------------------------------------------------------------------+
-
-//+------------------------------------------------------------------+
-//|                                                                  |
-//+------------------------------------------------------------------+
+//Container grid toevoegen en button label rectangle bouwen in grid
 class Container : public iGuiObject
   {
 private:
-   ArrayIGuiObject   childArray;
    int               headerHeight;
    int               collapseButtonSize;
    int               Margins;
+
+protected:
+   ArrayIGuiObject   childArray;
 
 public:
    string            name;
@@ -60,7 +60,7 @@ public:
       childArray.Add(&rectBody);
      }
 
-   bool              Create() override
+   bool              Create()
      {
       if(created)
          return true;
@@ -125,9 +125,9 @@ public:
       lblTitle.ApplyObjectStyle();
       btnCollapse.ApplyObjectStyle();
 
-      for(int _i = 0; _i < childArray.count; _i++)
+      for(int i = 0; i < childArray.count; i++)
         {
-         iGuiObject *child = (iGuiObject *)childArray.Get(_i);
+         iGuiObject *child = (iGuiObject *)childArray.Get(i);
          if(child != NULL)
            {
             if(!child.ApplyObjectStyle())
@@ -144,13 +144,36 @@ public:
       lblTitle.Move(_relX, _relY);
       btnCollapse.Move(_relX, _relY);
 
-      for(int _i = 0; _i < childArray.count; _i++)
+      for(int i = 0; i < childArray.count; i++)
         {
-         iGuiObject *child = (iGuiObject *)childArray.Get(_i);
+         iGuiObject *child = (iGuiObject *)childArray.Get(i);
          if(child != NULL)
            {
             if(!child.Move(_relX, _relY))
                return false;
+           }
+        }
+
+      return true;
+     }
+
+   bool              SetPosition(int _x, int _y)
+     {
+      int positionDiffX = _x - x;
+      int positionDiffY = _y - y;
+      x = _x;
+      y = _y;
+      
+      rectHeader.Move(positionDiffX, positionDiffY);
+      lblTitle.Move(positionDiffX, positionDiffY);
+      btnCollapse.Move(positionDiffX, positionDiffY);
+
+      for(int i = 0; i < childArray.count; i++)
+        {
+         iGuiObject *child = (iGuiObject *)childArray.Get(i);
+         if(child != NULL)
+           {
+           child.Move(positionDiffX, positionDiffY);
            }
         }
 
@@ -184,9 +207,9 @@ public:
       if(collapsed)
         {
          btnCollapse.SetText("-");
-         for(int _i = 0; _i < childArray.count; _i++)
+         for(int i = 0; i < childArray.count; i++)
            {
-            iGuiObject *child = (iGuiObject *)childArray.Get(_i);
+            iGuiObject *child = (iGuiObject *)childArray.Get(i);
             if(child != NULL)
               {
                if(!child.Show())
@@ -197,9 +220,9 @@ public:
       else
         {
          btnCollapse.SetText("+");
-         for(int _i = 0; _i < childArray.count; _i++)
+         for(int i = 0; i < childArray.count; i++)
            {
-            iGuiObject *child = (iGuiObject *)childArray.Get(_i);
+            iGuiObject *child = (iGuiObject *)childArray.Get(i);
             if(child != NULL)
               {
                if(!child.Hide())
@@ -215,44 +238,18 @@ public:
      {
       return 0;
      }
-
-   bool              SetAbsolutePositionToRelative(int _x, int _y)
-     {
-      // Delete the object if already created to prevent double creation
-      Delete();
-      x = x + _x;
-      y = y + _y;
-      //
-      if(!rectHeader.SetAbsolutePositionToRelative(x, y))
-         return false;
-      if(!rectBody.SetAbsolutePositionToRelative(x,y))
-         return false;
-      if(!lblTitle.SetAbsolutePositionToRelative(x,y))
-         return false;
-      if(!btnCollapse.SetAbsolutePositionToRelative(x,y))
-         return false;
-      // Set relative position for all children
-      for(int _i = 0; _i < childArray.count; _i++)
-        {
-         iGuiObject *child = (iGuiObject *)childArray.Get(_i);
-         if(child != NULL)
-           {
-            if(!child.SetAbsolutePositionToRelative(x, y))
-               return false;
-           }
-        }
-      return true;
-     }
-
    //+------------------------------------------------------------------+
    //|                                                                  |
    //+------------------------------------------------------------------+
-   bool              AddGuiObject(iGuiObject &_child)
+   bool              AddGuiObject(iGuiObject *child)
      {
-      _child.SetAbsolutePositionToRelative(x, y + headerHeight);
-      if(!_child.Create())
+      SetAbsolutePositionToRelative(x, y + headerHeight, child);
+      if(created)
+        {
+         printf("Object added but not yet created");
          return false;
-      if(childArray.Add(&_child))
+        }
+      if(!childArray.Add(child))
          return false;
       return true;
      }
@@ -283,5 +280,16 @@ public:
       return BTN_RetVal_None;
      }
 
+   bool              SetAbsolutePositionToRelative(int _x, int _y, iGuiObject *child)
+     {
+      int x_child = child.GetX();
+      int y_child = child.GetY();
+
+      return child.SetPosition(x_child + _x, y_child + _y);
+     }
+   int               GetX()         { return x;       }
+   int               GetY()         { return y;       }
+   int               GetWidth()     { return width;   }
+   int               GetHeight()    { return height;  }
   };
 //+------------------------------------------------------------------+

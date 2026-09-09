@@ -38,7 +38,6 @@ public:
    TradeDirection    direction;
    TradeStatus       status;
 
-#property
    ulong             ticketID;
    double            totalVolume;
    double            averageEntry;

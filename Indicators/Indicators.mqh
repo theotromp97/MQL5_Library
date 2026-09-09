@@ -206,17 +206,17 @@ private:
       static int handle = 0;
       if(handle == 0)
         {
-         handle =  iRSI(_Symbol, PERIOD_CURRENT,9, PRICE_CLOSE);
+         handle =  iRSI(_Symbol, PERIOD_CURRENT,14, PRICE_CLOSE);
         }
 
       // get value
       double array[];
       CopyBuffer(handle, 0, 0, 1, array);
-      if(array[0] < 20.0)
+      if(array[0] < 30.0)
         {
          return signalLong;
         }
-      if(array[0] > 80.0)
+      if(array[0] > 70.0)
         {
          return signalShort;
         }

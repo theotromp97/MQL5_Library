@@ -25,6 +25,12 @@ public:
       text = _text;
       textStyle = textDefaultBlack;
      }
+                     GuiTextObject(string _name, datetime _x_start, double _y_start, datetime _x_end, double _y_end, string _text, ENUM_OBJECT _objectType) :
+                     GuiObject(_name, _x_start, _y_start, _x_end, _y_end, _objectType)
+     {
+      text = _text;
+      textStyle = textDefaultBlack;
+     }
 
    bool              SetText(string _text)
      {

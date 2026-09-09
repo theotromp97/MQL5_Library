@@ -27,6 +27,8 @@ class GuiObject : public iGuiObject
 public:
    string            name;
    int               x, y, width, height;
+   datetime          x_start, x_end;
+   double            y_start, y_end;
    bool              created, visible;
    ENUM_OBJECT       objectType;
    ObjectStyle       objectStyle;
@@ -44,6 +46,21 @@ public:
       visible = false;
      }
 
+                     GuiObject(string _name, datetime _x_start, double _y_start, datetime _x_end, double _y_end, ENUM_OBJECT _objectType)
+     {
+      name = _name;
+      x_start = _x_start;
+      x_end   = _x_end;
+      y_start = _y_start;
+      y_end   = _y_end;
+
+      objectType = _objectType;
+      objectStyle = objectDefaultGray;
+      created = false;
+      visible = false;
+     }
+
+
    ENUM_OBJECT       GetObjectType()
      {
       return objectType;
@@ -59,7 +76,10 @@ public:
       if(created)
         {
          if(!ObjectDelete(0, name))
+           {
+            Print(StringFormat("Cannot Delete %s.", name));
             return false;
+           }
         }
       created = false;
       return true;
@@ -106,8 +126,11 @@ public:
    bool              Move(int _relX, int _relY)
      {
       if(!created)
+        {
+         x = x + _relX;
+         y = y + _relY;
          return false;
-
+        }
       if(!ObjectSetInteger(0, name, OBJPROP_XDISTANCE, x + _relX))
          return false;
       if(! ObjectSetInteger(0, name, OBJPROP_YDISTANCE, y + _relY))
@@ -115,6 +138,26 @@ public:
       x = x + _relX;
       y = y + _relY;
       return true;
+     }
+
+
+   bool              SetPosition(int _x, int _y)
+     {
+      if(!created)
+        {
+         x = _x;
+         y = _y;
+         return true;
+        }
+
+      x = _x;
+      y = _y;
+      if(!ObjectSetInteger(0, name, OBJPROP_XDISTANCE, x))
+         return false;
+      if(! ObjectSetInteger(0, name, OBJPROP_YDISTANCE, y))
+         return false;
+      return true;
+
      }
    //+------------------------------------------------------------------+
    //|                                                                  |
@@ -142,19 +185,25 @@ public:
       height = height;
       return true;
      }
-//+------------------------------------------------------------------+
-//|    Set position from declaration to relative positions, by adding the base position |
-//+------------------------------------------------------------------+
+   //+------------------------------------------------------------------+
+   //|    Set position from declaration to relative positions, by adding the base position |
+   //+------------------------------------------------------------------+
 
-   bool              SetAbsolutePositionToRelative(int _x, int _y)
-     {
-     // Delete the object if already created to prevent double creation
-     Delete();
-      x = x + _x;
-      y = y + _y;
-      return true;
-     }
+   //bool              SetAbsolutePositionToRelative(int _x, int _y)
+   //  {
+   //   // Delete the object if already created to prevent double creation
+   //   Delete();
+   //  x = x + _x;
+   //  y = y + _y;
+   //   return true;
+   //  }
+
+   int               GetX()         { return x;       }
+   int               GetY()         { return y;       }
+   int               GetWidth()     { return width;   }
+   int               GetHeight()    { return height;  }
   };
+
 
 
 //+------------------------------------------------------------------+
